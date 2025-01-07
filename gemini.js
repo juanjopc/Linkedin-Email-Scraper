@@ -24,45 +24,55 @@ const model = genAI.getGenerativeModel({
   systemInstruction: `
 You will receive a JSON with the following fields: profileUrl and content. For each object in the JSON, perform the following tasks:
 
-    Extract all unique email addresses found in the content field.
-    Extract all complete phone numbers (with or without an international prefix) found in the content field.
+1) Extract all unique email addresses found in the content field.
+2) Extract all complete phone numbers (with or without an international prefix) found in the content field.
+3) Attempt to identify the name of the person if it appears in the content.
+4) Attempt to identify the person's position (job title) if it appears in the content.
+5) Attempt to identify the person's company if it appears in the content, but only if it is a travel agency. 
+   If the person's company is not a travel agency or cannot be identified, leave the "company" field as an empty string.
 
 Return a structured JSON that includes:
 
-    The profileUrl field (ensuring that every URL from the input JSON is included and not repeated).
-    A list of email addresses (mails).
-    A list of phone numbers (phones).
+- "profileUrl": The profile URL as provided.
+- "mails": A list of unique email addresses (strings).
+- "phones": A list of unique phone numbers (strings).
+- "name": The name of the person if found, or empty string if not found.
+- "position": The person's position if found, or empty string if not found.
+- "company": The company name only if it's a travel agency, otherwise an empty string.
 
-The result format should be:
+The exact result format should be an array of objects, for example:
 
 [
   {
     "profileUrl": "https://example.com/profile1",
-    "mails": [
-      "email1@example.com",
-      "email2@example.com"
-    ],
-    "phones": [
-      "+1234567890",
-      "9876543210"
-    ]
+    "mails": ["email1@example.com", "email2@example.com"],
+    "phones": ["+1234567890", "9876543210"],
+    "name": "John Doe",
+    "position": "Travel Agent",
+    "company": "Global Travel Agency"
   },
   {
     "profileUrl": "https://example.com/profile2",
     "mails": [],
-    "phones": []
+    "phones": [],
+    "name": "",
+    "position": "",
+    "company": ""
   }
 ]
 
 Ensure that:
 
-    Records are processed in the exact order they appear in the input JSON.
-    Each profileUrl from the input JSON is included in the final result, without any duplicates.
-    Each email address in the mails list is unique.
-    Each phone number in the phones list is unique.
-    If no email addresses are found in the content field, the mails field must be an empty list.
-    If no phone numbers are found in the content field, the phones field must be an empty list.
-    All records from the input JSON must be processed completely and thoroughly, ensuring that the entire content of each content field is reviewed, regardless of its length.
+- The order of objects in the output matches the order of the input JSON.
+- Each profileUrl from the input JSON is included in the final result, without any duplicates.
+- Each email in "mails" is unique for that profile.
+- Each phone in "phones" is unique for that profile.
+- If no emails are found, "mails" must be an empty array.
+- If no phones are found, "phones" must be an empty array.
+- If no name is found, "name" must be an empty string.
+- If no position is found, "position" must be an empty string.
+- If the company is not a travel agency or cannot be determined, "company" must be an empty string.
+- All records from the input JSON must be processed completely and thoroughly.
   `,
 });
 
@@ -212,20 +222,24 @@ async function main() {
       index += concurrencyLimit;
     }
 
-    // d) Ya no guardamos gemini.json (se elimina esa parte).
-    //    Vamos directamente a generar el Excel con mails y phones
-
+    // d) Generar el Excel uniendo la información (mails y phones) con name, position y company
     const mailsRows = [];
     const phonesRows = [];
 
     allResults.forEach((obj) => {
       const url = obj?.profileUrl || "";
+      const personName = obj?.name || "";
+      const position = obj?.position || "";
+      const company = obj?.company || "";
 
       // Por cada mail
       const mails = obj?.mails || [];
       mails.forEach((mail) => {
         mailsRows.push({
           profileUrl: url,
+          name: personName,
+          position: position,
+          company: company,
           mail: mail,
         });
       });
@@ -235,9 +249,27 @@ async function main() {
       phones.forEach((phone) => {
         phonesRows.push({
           profileUrl: url,
+          name: personName,
+          position: position,
+          company: company,
           phone: phone,
         });
       });
+
+      // Si el perfil no tiene mails ni phones, igual podemos reflejar 
+      // la info de name/position/company si lo deseas:
+      // (Descomenta si quieres una fila "vacía" para esos casos)
+      /*
+      if (mails.length === 0 && phones.length === 0) {
+        mailsRows.push({
+          profileUrl: url,
+          name: personName,
+          position: position,
+          company: company,
+          mail: "",
+        });
+      }
+      */
     });
 
     const mailsWorksheet = XLSX.utils.json_to_sheet(mailsRows);
