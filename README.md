@@ -26,11 +26,11 @@ Make sure you have the following before starting:
 5. A **Google Chrome profile path**:
     -   **For Windows**:
         ```
-        C:\Users\YOUR_USERNAME\AppData\Local\Google\Chrome\User Data\Default
+        C:/Users/YOUR_USERNAME/AppData/Local/Google/Chrome/User Data
         ```
     -   **For Mac**:
         ```
-        /Users/YOUR_USERNAME/Library/Application Support/Google/Chrome/Default
+        /Users/YOUR_USERNAME/Library/Application Support/Google/Chrome
         ```
 
 ---
@@ -57,7 +57,7 @@ Make sure you have the following before starting:
 
     Example:
     ```bash
-    node main.js "civil engineers" "mx" 2
+    node main.js "civil engineer" "mx" 2
     ```
 
 ---
