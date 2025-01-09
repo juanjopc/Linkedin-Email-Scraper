@@ -57,7 +57,7 @@ Make sure you have the following before starting:
 
     Example:
     ```bash
-    node main.js "engineers" "mx" 2
+    node main.js "civil engineers" "mx" 2
     ```
 
 ---
