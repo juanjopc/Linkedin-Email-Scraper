@@ -35,6 +35,12 @@ Make sure you have the following before starting:
 
 ---
 
+## Setup
+
+Open the `.env` file in the root of the project and replace the placeholder values with your actual API keys and paths. That's it!
+
+---
+
 ## How to use it
 
 1. **Download the program**:
